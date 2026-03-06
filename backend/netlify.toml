@@ -4,24 +4,6 @@
 
 [functions]
   directory = "netlify/functions"
-  node_bundler = "nft"
-  included_files = [
-    "config/**",
-    "controllers/**",
-    "middleware/**",
-    "models/**",
-    "routes/**",
-    "services/**",
-    "utils/**"
-  ]
-
-[[headers]]
-  for = "/*"
-  [headers.values]
-    Access-Control-Allow-Origin = "*"
-    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, PATCH, OPTIONS"
-    Access-Control-Allow-Headers = "Content-Type, Authorization, X-Requested-With"
-    Access-Control-Allow-Credentials = "true"
 
 [[redirects]]
   from = "/api/*"
@@ -33,6 +15,3 @@
   from = "/"
   to = "/.netlify/functions/api"
   status = 200
-
-[context.production.environment]
-  NODE_VERSION = "18"
