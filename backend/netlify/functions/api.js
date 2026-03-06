@@ -1,47 +1,37 @@
 const serverless = require('serverless-http');
 const express = require('express');
-const dotenv = require('dotenv');
 const cors = require('cors');
-const connectDB = require('../../config/db');
-
-// Load env vars
-dotenv.config();
-
-// Connect to database
-connectDB();
+const mongoose = require('mongoose');
 
 const app = express();
 
-// CORS configuration - allow Vercel preview URLs and production
-const allowedOrigins = [
-    'https://aayush-seva-ai.vercel.app',
-    'http://localhost:5173',
-    'http://localhost:3000'
-];
+// Simple CORS - allow all origins
+app.use(cors({
+    origin: true,
+    credentials: true
+}));
 
-const corsOptions = {
-    origin: function (origin, callback) {
-        // Allow requests with no origin (mobile apps, curl, etc.)
-        if (!origin) return callback(null, true);
-        
-        // Check if origin is in allowed list or matches Vercel preview pattern
-        if (allowedOrigins.includes(origin) || 
-            origin.includes('vercel.app') || 
-            origin.includes('netlify.app')) {
-            callback(null, true);
-        } else {
-            callback(null, true); // Allow all for now
-        }
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
-};
-
-// Middleware
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
-app.use(cors(corsOptions));
+
+// MongoDB connection
+let isConnected = false;
+const connectDB = async () => {
+    if (isConnected) return;
+    try {
+        await mongoose.connect(process.env.MONGO_URI);
+        isConnected = true;
+        console.log('MongoDB Connected');
+    } catch (err) {
+        console.error('MongoDB Error:', err.message);
+    }
+};
+
+// Connect before handling requests
+app.use(async (req, res, next) => {
+    await connectDB();
+    next();
+});
 
 // Route files
 const authRoutes = require('../../routes/authRoutes');
@@ -55,7 +45,7 @@ const reminderRoutes = require('../../routes/reminderRoutes');
 const migrationRoutes = require('../../routes/migrationRoutes');
 const recoveryRoutes = require('../../routes/recoveryRoutes');
 
-// Mount routers - note: path is relative to the function URL
+// Mount routers
 app.use('/auth', authRoutes);
 app.use('/triage', triageRoutes);
 app.use('/family', familyRoutes);
@@ -67,16 +57,15 @@ app.use('/reminders', reminderRoutes);
 app.use('/migration', migrationRoutes);
 app.use('/recovery', recoveryRoutes);
 
-// Health check endpoint
+// Health check
 app.get('/', (req, res) => {
     res.json({ message: 'Aayush Seva AI API is running...', status: 'ok' });
 });
 
-// Error handling middleware
+// Error handling
 app.use((err, req, res, next) => {
     console.error('Error:', err);
     res.status(500).json({ message: 'Server error', error: err.message });
 });
 
-// Export handler for Netlify
 module.exports.handler = serverless(app);
