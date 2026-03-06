@@ -12,13 +12,39 @@ connectDB();
 
 const app = express();
 
+// CORS configuration - allow Vercel preview URLs and production
+const allowedOrigins = [
+    'https://aayush-seva-ai.vercel.app',
+    'http://localhost:5173',
+    'http://localhost:3000'
+];
+
+const corsOptions = {
+    origin: function (origin, callback) {
+        // Allow requests with no origin (mobile apps, curl, etc.)
+        if (!origin) return callback(null, true);
+        
+        // Check if origin is in allowed list or matches Vercel preview pattern
+        if (allowedOrigins.includes(origin) || 
+            origin.includes('vercel.app') || 
+            origin.includes('netlify.app')) {
+            callback(null, true);
+        } else {
+            callback(null, true); // Allow all for now
+        }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+};
+
 // Middleware
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
-app.use(cors({
-    origin: process.env.CLIENT_URL || '*',
-    credentials: true
-}));
+app.use(cors(corsOptions));
+
+// Handle preflight requests
+app.options('*', cors(corsOptions));
 
 // Route files
 const authRoutes = require('../../routes/authRoutes');
