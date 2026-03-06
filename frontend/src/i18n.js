@@ -15,6 +15,7 @@ i18n
         },
         lng: initialLanguage,
         fallbackLng: 'en',
+        debug: false,
         interpolation: {
             escapeValue: false
         }

@@ -45,7 +45,19 @@ const reminderRoutes = require('../../routes/reminderRoutes');
 const migrationRoutes = require('../../routes/migrationRoutes');
 const recoveryRoutes = require('../../routes/recoveryRoutes');
 
-// Mount routers
+// Mount routers at /api/* paths (Netlify redirects /api/* to this function)
+app.use('/api/auth', authRoutes);
+app.use('/api/triage', triageRoutes);
+app.use('/api/family', familyRoutes);
+app.use('/api/officer', officerRoutes);
+app.use('/api/reports', reportRoutes);
+app.use('/api/pregnancy', pregnancyRoutes);
+app.use('/api/alerts', alertRoutes);
+app.use('/api/reminders', reminderRoutes);
+app.use('/api/migration', migrationRoutes);
+app.use('/api/recovery', recoveryRoutes);
+
+// Also mount at root paths for backward compatibility
 app.use('/auth', authRoutes);
 app.use('/triage', triageRoutes);
 app.use('/family', familyRoutes);
@@ -59,6 +71,10 @@ app.use('/recovery', recoveryRoutes);
 
 // Health check
 app.get('/', (req, res) => {
+    res.json({ message: 'Aayush Seva AI API is running...', status: 'ok' });
+});
+
+app.get('/api', (req, res) => {
     res.json({ message: 'Aayush Seva AI API is running...', status: 'ok' });
 });
 
